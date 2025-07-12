@@ -1,0 +1,107 @@
+repos:
+  # Secret detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets-hook
+        args: ["--baseline", ".secrets.baseline"]
+
+  # TypeScript/JavaScript linting and formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types: [file]
+        types_or: [javascript, jsx, ts, tsx, json, css, scss, html, md, yaml]
+
+  # ESLint for TypeScript/React
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.0.0
+    hooks:
+      - id: eslint
+        files: \.(js|jsx|ts|tsx)$
+        args: [--fix]
+
+  # TypeScript type checking
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: TypeScript Check
+        entry: npx tsc --noEmit
+        language: system
+        types: [file]
+        types_or: [ts, tsx]
+        pass_filenames: false
+
+  # Security vulnerability scanning
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: name-tests-test
+      - id: requirements-txt-fixer
+      - id: fix-byte-order-marker
+
+  # Git hooks for better commit messages
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # Conventional commit message format
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen-branch
+        stages: [push]
+
+  # Package.json validation
+  - repo: local
+    hooks:
+      - id: validate-package-json
+        name: Validate package.json
+        entry: node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8'))"
+        language: system
+        files: package\.json$
+
+  # Lock file consistency
+  - repo: local
+    hooks:
+      - id: check-lock-files
+        name: Check lock files
+        entry: npm ci --dry-run
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # Build verification
+  - repo: local
+    hooks:
+      - id: build-check
+        name: Build Check
+        entry: npm run build
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+
+  # Test runner (if tests exist)
+  - repo: local
+    hooks:
+      - id: run-tests
+        name: Run Tests
+        entry: npm test
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+        args: [--if-present] 

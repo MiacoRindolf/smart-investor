@@ -237,7 +237,7 @@ export const RateLimitError = () => {
         </div>
       </div>
       <div className="text-sm text-yellow-600">
-        <strong>API Key:</strong> your_api_key_here
+        <strong>API Key:</strong> your_alpha_vantage_api_key_here
       </div>
     </div>
   )

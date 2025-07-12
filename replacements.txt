@@ -1,0 +1,2 @@
+your_alpha_vantage_api_key_here==>your_alpha_vantage_api_key_here
+your_openai_api_key_here ==>your_openai_api_key_here 

@@ -47,4 +47,48 @@ router.get('/historical/:symbol', async (req, res) => {
   }
 });
 
+// GET /api/news - Get latest Yahoo Finance news (placeholder)
+router.get('/news', async (req, res) => {
+  try {
+    // TODO: Replace with real Yahoo Finance news fetching logic
+    res.json({
+      success: true,
+      news: [
+        {
+          title: "Tech Stocks Rally on Strong Earnings Reports",
+          summary: "Major technology companies reported better-than-expected quarterly results, driving market optimism and pushing indices higher.",
+          sentiment: "positive",
+          impact: "high",
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toLocaleString(),
+          source: "Yahoo Finance",
+          url: "https://finance.yahoo.com/",
+          lastUpdated: new Date().toLocaleString()
+        },
+        {
+          title: "Federal Reserve Signals Potential Rate Cut",
+          summary: "The Fed's latest meeting minutes suggest a possible interest rate reduction in the coming months, boosting market sentiment.",
+          sentiment: "positive",
+          impact: "high",
+          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toLocaleString(),
+          source: "Yahoo Finance",
+          url: "https://finance.yahoo.com/",
+          lastUpdated: new Date().toLocaleString()
+        },
+        {
+          title: "Oil Prices Stabilize After Recent Volatility",
+          summary: "Crude oil prices have found support levels after recent geopolitical tensions caused significant market swings.",
+          sentiment: "neutral",
+          impact: "medium",
+          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toLocaleString(),
+          source: "Yahoo Finance",
+          url: "https://finance.yahoo.com/",
+          lastUpdated: new Date().toLocaleString()
+        }
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router; 
