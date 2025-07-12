@@ -5,6 +5,7 @@ import Trading from './pages/Trading'
 import Education from './pages/Education'
 import Layout from './components/layout/Layout'
 import StatusIndicator from './components/ui/StatusIndicator'
+import WebSocketStatus from './components/ui/WebSocketStatus'
 import { useRouter, useNavigationHandler } from './hooks/useRouter'
 import { ThemeProvider } from './contexts/ThemeContext'
 
@@ -35,6 +36,8 @@ const App: React.FC = () => {
         </Layout>
         {/* Always show status indicator, never block the UI */}
         <StatusIndicator />
+        {/* WebSocket connection status */}
+        <WebSocketStatus />
       </div>
     </ThemeProvider>
   )
