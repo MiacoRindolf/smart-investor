@@ -10,7 +10,8 @@ import {
   XCircle
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts'
-import { marketAPI } from '../services/api'
+import { marketAPI, getStockHistoricalData } from '../services/api'
+import { dbService } from '../services/database'
 
 interface StockAnalysisProps {
   symbol: string
@@ -21,6 +22,7 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
   const [stockData, setStockData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'overview' | 'technical' | 'fundamental'>('overview')
+  const [priceData, setPriceData] = useState<any[]>([])
 
   useEffect(() => {
     const fetchStockAnalysis = async () => {
@@ -28,19 +30,28 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
         setLoading(true)
         const data = await marketAPI.getStockAnalysis(symbol)
         setStockData(data)
+        // Fetch real historical price data from APIs
+        const history = await getStockHistoricalData(symbol, 365)
+        setPriceData(
+          history.map((h) => ({
+            day: new Date(h.date).getDate(),
+            price: h.close,
+            date: new Date(h.date).toLocaleDateString()
+          }))
+        )
       } catch (error) {
         console.error('Failed to fetch stock analysis:', error)
+        setPriceData([])
       } finally {
         setLoading(false)
       }
     }
-
     fetchStockAnalysis()
   }, [symbol])
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -55,10 +66,10 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
 
   if (!stockData) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 text-center">
         <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900">Unable to Load Analysis</h3>
-        <p className="text-gray-600">Failed to fetch analysis for {symbol}</p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Unable to Load Analysis</h3>
+        <p className="text-gray-600 dark:text-gray-300">Failed to fetch analysis for {symbol}</p>
       </div>
     )
   }
@@ -86,12 +97,6 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
     return <XCircle className="h-5 w-5 text-red-600" />
   }
 
-  // Mock chart data for price movement
-  const priceData = Array.from({ length: 30 }, (_, i) => ({
-    day: i + 1,
-    price: stockData.price + (Math.random() - 0.5) * 20
-  }))
-
   // RSI gauge data
   const rsiData = [{
     name: 'RSI',
@@ -101,7 +106,7 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
   }]
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
         <div className="flex justify-between items-start">
@@ -126,9 +131,9 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
             {stockData.source && (
               <div className="mt-2">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  stockData.source === 'Alpha Vantage' ? 'bg-blue-100 text-blue-800' :
-                  stockData.source === 'Yahoo Finance' ? 'bg-purple-100 text-purple-800' :
-                  'bg-gray-100 text-gray-800'
+                  stockData.source === 'Alpha Vantage' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                  stockData.source === 'Yahoo Finance' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                  'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                 }`}>
                   Data: {stockData.source}
                 </span>
@@ -159,7 +164,7 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="-mb-px flex space-x-8 px-6">
           {[
             { id: 'overview', name: 'Overview', icon: BarChart3 },
@@ -169,11 +174,11 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } transition-colors`}
+              className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                ${activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-300'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300 hover:border-gray-300 dark:hover:border-gray-600'}
+              `}
             >
               <tab.icon className="h-4 w-4" />
               <span>{tab.name}</span>
@@ -183,90 +188,96 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-6 bg-white dark:bg-gray-900">
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Key Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-gray-600">Volume</p>
-                <p className="text-xl font-bold text-gray-900">{stockData.volume.toLocaleString()}</p>
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Volume</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{stockData.volume.toLocaleString()}</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-gray-600">Market Cap</p>
-                <p className="text-xl font-bold text-gray-900">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Market Cap</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   ${(stockData.marketCap / 1e9).toFixed(1)}B
                 </p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-gray-600">P/E Ratio</p>
-                <p className="text-xl font-bold text-gray-900">{stockData.fundamentals.peRatio.toFixed(1)}</p>
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">P/E Ratio</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{stockData.fundamentals.peRatio.toFixed(1)}</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-gray-600">Dividend Yield</p>
-                <p className="text-xl font-bold text-gray-900">{stockData.fundamentals.dividendYield.toFixed(2)}%</p>
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Dividend Yield</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{stockData.fundamentals.dividendYield.toFixed(2)}%</p>
               </div>
             </div>
 
             {/* Price Chart */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-4">Price Movement (30 Days)</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={priceData}>
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Price Movement (30 Days)</h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={priceData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => [`$${typeof value === 'number' ? value.toFixed(2) : value}`, 'Price']} />
-                  <Line type="monotone" dataKey="price" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                  <XAxis dataKey="date" minTickGap={30} />
+                  <YAxis domain={['auto', 'auto']} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="price" stroke="#2563eb" dot={false} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
             {/* Analysis Scores */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">Overall Score</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Overall Score</span>
                   {getScoreIcon(stockData.analysisScore.overall)}
                 </div>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1 mt-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-4 w-4 ${
-                        i < stockData.analysisScore.overall ? 'text-yellow-500 fill-current' : 'text-gray-300'
+                      className={`h-5 w-5 transition-colors ${
+                        i < stockData.analysisScore.overall
+                          ? 'text-yellow-400 dark:text-yellow-300 fill-current'
+                          : 'text-gray-300 dark:text-gray-600'
                       }`}
                     />
                   ))}
                 </div>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">Technical</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Technical</span>
                   {getScoreIcon(stockData.analysisScore.technical)}
                 </div>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1 mt-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-4 w-4 ${
-                        i < stockData.analysisScore.technical ? 'text-yellow-500 fill-current' : 'text-gray-300'
+                      className={`h-5 w-5 transition-colors ${
+                        i < stockData.analysisScore.technical
+                          ? 'text-yellow-400 dark:text-yellow-300 fill-current'
+                          : 'text-gray-300 dark:text-gray-600'
                       }`}
                     />
                   ))}
                 </div>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">Fundamental</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Fundamental</span>
                   {getScoreIcon(stockData.analysisScore.fundamental)}
                 </div>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1 mt-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-4 w-4 ${
-                        i < stockData.analysisScore.fundamental ? 'text-yellow-500 fill-current' : 'text-gray-300'
+                      className={`h-5 w-5 transition-colors ${
+                        i < stockData.analysisScore.fundamental
+                          ? 'text-yellow-400 dark:text-yellow-300 fill-current'
+                          : 'text-gray-300 dark:text-gray-600'
                       }`}
                     />
                   ))}
@@ -280,7 +291,7 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* RSI Gauge */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <h3 className="font-semibold text-gray-900 mb-4">RSI (Relative Strength Index)</h3>
                 <ResponsiveContainer width="100%" height={150}>
                   <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%" data={rsiData}>
@@ -297,7 +308,7 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
               </div>
 
               {/* Moving Averages */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <h3 className="font-semibold text-gray-900 mb-4">Moving Averages</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -327,26 +338,34 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
             </div>
 
             {/* Technical Indicators Table */}
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-4">Technical Indicators</h3>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Indicator</th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Value</th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Signal</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2">Indicator</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2">Value</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2">Signal</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                     <tr>
                       <td className="py-2 text-sm text-gray-900">MACD</td>
-                      <td className="py-2 text-sm text-gray-900">{stockData.technicalIndicators.macd.toFixed(2)}</td>
+                      <td className="py-2 text-sm text-gray-900">{
+                        typeof stockData.technicalIndicators.macd === 'number' && !isNaN(stockData.technicalIndicators.macd)
+                          ? stockData.technicalIndicators.macd.toFixed(2)
+                          : '-'
+                      }</td>
                       <td className="py-2">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          stockData.technicalIndicators.macd > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          typeof stockData.technicalIndicators.macd === 'number' && stockData.technicalIndicators.macd > 0
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
-                          {stockData.technicalIndicators.macd > 0 ? 'Bullish' : 'Bearish'}
+                          {typeof stockData.technicalIndicators.macd === 'number'
+                            ? (stockData.technicalIndicators.macd > 0 ? 'Bullish' : 'Bearish')
+                            : 'N/A'}
                         </span>
                       </td>
                     </tr>
@@ -371,22 +390,22 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
           <div className="space-y-6">
             {/* Valuation Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <p className="text-sm font-medium text-gray-600">P/E Ratio</p>
                 <p className="text-2xl font-bold text-gray-900">{stockData.fundamentals.peRatio.toFixed(1)}</p>
                 <p className="text-xs text-gray-500 mt-1">Price to Earnings</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <p className="text-sm font-medium text-gray-600">P/B Ratio</p>
                 <p className="text-2xl font-bold text-gray-900">{stockData.fundamentals.pbRatio.toFixed(1)}</p>
                 <p className="text-xs text-gray-500 mt-1">Price to Book</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <p className="text-sm font-medium text-gray-600">EPS</p>
                 <p className="text-2xl font-bold text-gray-900">${stockData.fundamentals.eps.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-1">Earnings Per Share</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <p className="text-sm font-medium text-gray-600">Dividend Yield</p>
                 <p className="text-2xl font-bold text-gray-900">{stockData.fundamentals.dividendYield.toFixed(2)}%</p>
                 <p className="text-xs text-gray-500 mt-1">Annual Dividend</p>
@@ -395,7 +414,7 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
 
             {/* Financial Health */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <h3 className="font-semibold text-gray-900 mb-4">Revenue & Debt</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
@@ -418,7 +437,7 @@ const StockAnalysis = ({ symbol, onClose }: StockAnalysisProps) => {
               </div>
 
               {/* Investment Quality */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow-sm">
                 <h3 className="font-semibold text-gray-900 mb-4">Investment Quality</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">

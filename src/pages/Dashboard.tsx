@@ -10,7 +10,9 @@ import {
   Target,
   Newspaper,
   Zap,
-  Plus
+  Plus,
+  BarChart3,
+  Users
 } from 'lucide-react'
 import { 
   XAxis, 
@@ -24,6 +26,7 @@ import {
 import { marketAPI } from '../services/api'
 import AIChat from '../components/AIChat'
 import StockAnalysis from '../components/StockAnalysis'
+import PelosiTracker from '../components/PelosiTracker'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Alert from '../components/ui/Alert'
@@ -58,13 +61,16 @@ const Dashboard: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null)
   const [selectedStock, setSelectedStock] = useState<string | null>(null)
   const [showAIChat, setShowAIChat] = useState(false)
+  const [showPelosiTracker, setShowPelosiTracker] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [usingFallbackData, setUsingFallbackData] = useState(false)
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
       setError(null)
+      setUsingFallbackData(false)
 
       // Fetch market overview and news
       const [marketOverview, news] = await Promise.all([
@@ -72,8 +78,13 @@ const Dashboard: React.FC = () => {
         marketAPI.getMarketNews()
       ])
 
+      // Check if we're using fallback data
+      if (news.length > 0 && news[0].source === 'Financial Times' && news[0].url === '#') {
+        setUsingFallbackData(true)
+      }
+
       // Get watchlist symbols from localStorage
-      const watchlistSymbols = JSON.parse(localStorage.getItem('smartinvestor_watchlist') || '["AAPL", "GOOGL", "MSFT", "TSLA", "NVDA"]')
+      const watchlistSymbols = JSON.parse(localStorage.getItem('smartinvestor_watchlist') || '[]')
       
       // Fetch watchlist data
       const watchlistPromises = watchlistSymbols.slice(0, 5).map((symbol: string) => 
@@ -108,14 +119,7 @@ const Dashboard: React.FC = () => {
     fetchDashboardData()
   }, [])
 
-  const portfolioHistory = [
-    { date: 'Jan', value: 20000, growth: 5.2 },
-    { date: 'Feb', value: 21500, growth: 7.5 },
-    { date: 'Mar', value: 23000, growth: 15.0 },
-    { date: 'Apr', value: 22500, growth: 12.5 },
-    { date: 'May', value: 24000, growth: 20.0 },
-    { date: 'Jun', value: 25000, growth: 25.0 },
-  ]
+  const portfolioHistory: any[] = []
 
   const getSentimentColor = (sentiment: string): string => {
     switch (sentiment?.toLowerCase()) {
@@ -125,40 +129,7 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const marketStats: MarketStat[] = data ? [
-    {
-      label: 'Market Cap',
-      value: '$2.4T',
-      change: 2.3,
-      icon: <DollarSign className="h-6 w-6" />,
-      trend: 'up',
-      color: 'bg-blue-500'
-    },
-    {
-      label: 'Active Positions',
-      value: '12',
-      change: 8.1,
-      icon: <Target className="h-6 w-6" />,
-      trend: 'up',
-      color: 'bg-green-500'
-    },
-    {
-      label: 'Daily Volume',
-      value: '$847B',
-      change: -1.2,
-      icon: <Activity className="h-6 w-6" />,
-      trend: 'down',
-      color: 'bg-orange-500'
-    },
-    {
-      label: 'AI Insights',
-      value: '94%',
-      change: 12.5,
-      icon: <Brain className="h-6 w-6" />,
-      trend: 'up',
-      color: 'bg-purple-500'
-    }
-  ] : []
+  const marketStats: MarketStat[] = []
 
   if (loading) {
     return (
@@ -286,6 +257,14 @@ const Dashboard: React.FC = () => {
               AI Assistant
             </Button>
             <Button
+              onClick={() => setShowPelosiTracker(!showPelosiTracker)}
+              variant={showPelosiTracker ? 'secondary' : 'outline'}
+              icon={<Users className="h-4 w-4" />}
+              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+            >
+              Pelosi Tracker
+            </Button>
+            <Button
               variant="outline"
               icon={<Plus className="h-4 w-4" />}
               className="bg-white/20 border-white/30 text-white hover:bg-white/30"
@@ -297,35 +276,75 @@ const Dashboard: React.FC = () => {
       </Card>
 
       {/* Market Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {marketStats.map((stat, index) => (
-          <Card key={index} variant="elevated" hover className="cursor-pointer">
-            <Card.Content className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                  {stat.change && (
-                    <div className={`flex items-center text-sm ${
-                      stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {stat.trend === 'up' ? (
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                      ) : (
-                        <ArrowDownRight className="h-4 w-4 mr-1" />
-                      )}
-                      {Math.abs(stat.change)}%
-                    </div>
-                  )}
+      {marketStats.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {marketStats.map((stat, index) => (
+            <Card key={index} variant="elevated" hover className="cursor-pointer">
+              <Card.Content className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                    {stat.change && (
+                      <div className={`flex items-center text-sm ${
+                        stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {stat.trend === 'up' ? (
+                          <ArrowUpRight className="h-4 w-4 mr-1" />
+                        ) : (
+                          <ArrowDownRight className="h-4 w-4 mr-1" />
+                        )}
+                        {Math.abs(stat.change)}%
+                      </div>
+                    )}
+                  </div>
+                  <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white`}>
+                    {stat.icon}
+                  </div>
                 </div>
-                <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white`}>
-                  {stat.icon}
-                </div>
-              </div>
-            </Card.Content>
-          </Card>
-        ))}
-      </div>
+              </Card.Content>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <DashboardStatsSkeleton />
+      )}
+
+      {/* Pelosi Tracker Summary */}
+      <Card variant="elevated" className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 dark:from-purple-900/20 dark:to-pink-900/20 dark:border-purple-700">
+        <Card.Header divider className="dark:border-purple-700">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+              <Users className="h-5 w-5 mr-2 text-purple-600" />
+              Congressional Trading Activity
+            </h3>
+            <Button 
+              onClick={() => setShowPelosiTracker(true)}
+              variant="outline" 
+              size="sm"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-300 dark:hover:bg-purple-900/20"
+            >
+              View Full Tracker
+            </Button>
+          </div>
+        </Card.Header>
+        <Card.Content>
+          <div className="text-center py-8">
+            <Users className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Congressional trading data will be available when connected to data sources
+            </p>
+            <Button 
+              onClick={() => setShowPelosiTracker(true)}
+              variant="outline"
+              size="sm"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-300 dark:hover:bg-purple-900/20"
+            >
+              Open Tracker
+            </Button>
+          </div>
+        </Card.Content>
+      </Card>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -340,48 +359,58 @@ const Dashboard: React.FC = () => {
             </div>
           </Card.Header>
           <Card.Content>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={portfolioHistory}>
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                    }}
-                    formatter={(value: any) => [`$${value.toLocaleString()}`, 'Portfolio Value']}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#3b82f6"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorValue)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            {portfolioHistory.length > 0 ? (
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={portfolioHistory}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                      tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      formatter={(value: any) => [`$${value.toLocaleString()}`, 'Portfolio Value']}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorValue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-80 flex items-center justify-center">
+                <div className="text-center">
+                  <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No portfolio data available</p>
+                  <p className="text-sm text-gray-400">Add positions to see performance</p>
+                </div>
+              </div>
+            )}
           </Card.Content>
         </Card>
 
@@ -585,6 +614,28 @@ const Dashboard: React.FC = () => {
                   </Button>
                 </div>
                 <StockAnalysis symbol={selectedStock} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pelosi Tracker Modal */}
+      {showPelosiTracker && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setShowPelosiTracker(false)}>
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
+              <div className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Nancy Pelosi Options Tracker</h2>
+                  <Button onClick={() => setShowPelosiTracker(false)} variant="secondary">
+                    Close
+                  </Button>
+                </div>
+                <PelosiTracker />
               </div>
             </div>
           </div>

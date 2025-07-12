@@ -1,0 +1,32 @@
+{
+  "name": "smartinvestor-backend",
+  "version": "1.0.0",
+  "description": "Backend server for SmartInvestor - Yahoo Finance proxy",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "stock-market",
+    "yahoo-finance",
+    "api-proxy",
+    "investment"
+  ],
+  "author": "SmartInvestor Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "yahoo-finance2": "^2.8.1",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 

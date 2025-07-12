@@ -1,5 +1,5 @@
 // Core Types
-export interface StockQuote {
+export interface Stock {
   symbol: string
   name: string
   price: number
@@ -7,6 +7,9 @@ export interface StockQuote {
   changePercent: number
   volume: number
   marketCap?: number
+}
+
+export interface StockQuote extends Stock {
   previousClose?: number
   dayHigh?: number
   dayLow?: number
@@ -130,8 +133,8 @@ export interface ComponentWithClassName {
 export interface PatternCondition {
   indicator: 'EMA' | 'RSI' | 'MACD' | 'MACD_SIGNAL' | 'PRICE' | 'VOLUME'
   operator: 'above' | 'below' | 'equals' | 'greater_than' | 'less_than'
-  value: number | string
-  timeframe?: number // For indicators like EMA (50, 200, etc.)
+  value: number | string // can be a number, 'PRICE', or 'EMA_20', 'EMA_50', 'EMA_100'
+  timeframe?: number // For indicators like EMA (20, 50, 100, 200, etc.)
 }
 
 export interface CustomPattern {
@@ -163,4 +166,85 @@ export interface PatternAnalysis {
   matchRate: number
   averageConfidence: number
   lastAnalysis: string
+}
+
+// Portfolio Types
+export interface Position {
+  symbol: string
+  shares: number
+  avgPrice: number
+  currentPrice: number
+  value: number
+  gainLoss: number
+  gainLossPercent: number
+}
+
+export interface Portfolio {
+  totalValue: number
+  totalGainLoss: number
+  totalGainLossPercent: number
+  cash: number
+  positions: Position[]
+}
+
+// Nancy Pelosi Options Tracker Types
+export interface PelosiTrade {
+  id: string
+  symbol: string
+  companyName: string
+  tradeType: 'BUY' | 'SELL' | 'CALL' | 'PUT'
+  optionType?: 'CALL' | 'PUT'
+  strikePrice?: number
+  expirationDate?: string
+  shares?: number
+  contracts?: number
+  tradeDate: string
+  tradePrice: number
+  currentPrice: number
+  profitLoss: number
+  profitLossPercent: number
+  daysHeld: number
+  status: 'ACTIVE' | 'CLOSED' | 'EXPIRED'
+  disclosureDate: string
+  filingDate: string
+  source: string
+}
+
+export interface PelosiAnalytics {
+  totalTrades: number
+  activeTrades: number
+  totalProfitLoss: number
+  totalProfitLossPercent: number
+  winRate: number
+  averageReturn: number
+  bestTrade: PelosiTrade
+  worstTrade: PelosiTrade
+  topPerformers: PelosiTrade[]
+  recentActivity: PelosiTrade[]
+  sectorBreakdown: {
+    sector: string
+    trades: number
+    profitLoss: number
+    percentage: number
+  }[]
+  monthlyPerformance: {
+    month: string
+    profitLoss: number
+    trades: number
+  }[]
+}
+
+export interface PelosiInsights {
+  averageHoldTime: number
+  preferredSectors: string[]
+  tradingPatterns: {
+    pattern: string
+    frequency: number
+    successRate: number
+  }[]
+  marketTiming: {
+    accuracy: number
+    averageReturn: number
+  }
+  correlationWithMarket: number
 } 

@@ -5,6 +5,8 @@ This is the backend server for the SmartInvestor application, providing real-tim
 ## Features
 
 - **Yahoo Finance Proxy**: Fetches real-time stock quotes using the `yahoo-finance2` package
+- **Historical Data**: Provides historical price data for technical analysis
+- **Symbol Search**: Search for stock symbols by company name
 - **CORS Support**: Configured for frontend integration
 - **Modular Architecture**: Organized with routes and services
 - **Error Handling**: Robust error handling and logging
@@ -49,6 +51,57 @@ curl http://localhost:4000/api/quote/AAPL
 }
 ```
 
+### GET `/api/historical/:symbol`
+Fetches historical price data for a given symbol.
+
+**Parameters:**
+- `days` (optional): Number of days of historical data (1-365, default: 365)
+
+**Example:**
+```bash
+curl "http://localhost:4000/api/historical/AAPL?days=30"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "date": "2024-01-15",
+      "open": 175.23,
+      "high": 176.45,
+      "low": 174.89,
+      "close": 175.43,
+      "volume": 45678900,
+      "timestamp": 1705315200000
+    }
+  ]
+}
+```
+
+### GET `/api/search/:query`
+Searches for stock symbols by company name or symbol.
+
+**Example:**
+```bash
+curl http://localhost:4000/api/search/Apple
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "results": [
+    {
+      "symbol": "AAPL",
+      "shortname": "Apple Inc.",
+      "quoteType": "EQUITY"
+    }
+  ]
+}
+```
+
 ## Architecture
 
 ```
@@ -72,4 +125,7 @@ The frontend automatically falls back to this backend when:
 2. Alpha Vantage rate limit is exceeded
 3. Alpha Vantage API fails
 
-The frontend calls `http://localhost:4000/api/quote/:symbol` to get real-time stock data. 
+The frontend calls:
+- `http://localhost:4000/api/quote/:symbol` to get real-time stock data
+- `http://localhost:4000/api/historical/:symbol` to get historical data for technical analysis
+- `http://localhost:4000/api/search/:query` to search for stock symbols 

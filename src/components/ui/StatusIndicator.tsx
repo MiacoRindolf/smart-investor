@@ -6,7 +6,8 @@ import {
   Leaf,
   Activity,
   Database,
-  Zap
+  Zap,
+  X as CloseIcon
 } from 'lucide-react'
 import { STORAGE_KEYS } from '../../config/constants'
 
@@ -20,19 +21,23 @@ interface StatusBadgeProps {
   label: string
   status: 'active' | 'warning' | 'error' | 'offline'
   description?: string
+  onClose?: () => void
+  showClose?: boolean
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ 
   icon, 
   label, 
   status, 
-  description 
+  description,
+  onClose,
+  showClose
 }) => {
   const statusClasses = {
-    active: 'bg-green-50 text-green-700 border-green-200',
-    warning: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    error: 'bg-red-50 text-red-700 border-red-200',
-    offline: 'bg-gray-50 text-gray-700 border-gray-200'
+    active: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700',
+    warning: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700',
+    error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700',
+    offline: 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
   }
 
   return (
@@ -50,6 +55,15 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
           <div className="text-xs opacity-75 truncate">{description}</div>
         )}
       </div>
+      {showClose && (
+        <button
+          onClick={onClose}
+          className="ml-2 p-1 rounded hover:bg-gray-200 focus:outline-none"
+          aria-label="Close notification"
+        >
+          <CloseIcon className="h-4 w-4" />
+        </button>
+      )}
     </div>
   )
 }
@@ -62,6 +76,11 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   const [hasAI, setHasAI] = useState(false)
   const [conservationMode, setConservationMode] = useState(false)
   const [apiCallCount, setApiCallCount] = useState(0)
+  const [showLiveData, setShowLiveData] = useState(true)
+  const [showAI, setShowAI] = useState(true)
+  const [showConservation, setShowConservation] = useState(true)
+  const [showApiUsage, setShowApiUsage] = useState(true)
+  const [showSystemStatus, setShowSystemStatus] = useState(true)
 
   useEffect(() => {
     // Check API keys
@@ -94,7 +113,23 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({
       setApiCallCount(prev => prev + Math.floor(Math.random() * 2))
     }, 5000)
 
-    return () => clearInterval(interval)
+    // Auto-dismiss logic
+    setShowLiveData(true)
+    setShowAI(true)
+    setShowConservation(true)
+    setShowApiUsage(true)
+    setShowSystemStatus(true)
+    const timers: NodeJS.Timeout[] = []
+    timers.push(setTimeout(() => setShowLiveData(false), 4000))
+    timers.push(setTimeout(() => setShowAI(false), 4000))
+    timers.push(setTimeout(() => setShowConservation(false), 4000))
+    timers.push(setTimeout(() => setShowApiUsage(false), 4000))
+    timers.push(setTimeout(() => setShowSystemStatus(false), 4000))
+
+    return () => {
+      clearInterval(interval)
+      timers.forEach(clearTimeout)
+    }
   }, [])
 
   const positionClasses = position === 'fixed' 
@@ -104,48 +139,64 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   return (
     <div className={`${positionClasses} space-y-2 ${className}`}>
       {/* Market Data Status */}
-      <StatusBadge
-        icon={hasRealData ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-        label={hasRealData ? "Live Market Data" : "Demo Mode"}
-        status={hasRealData ? "active" : "warning"}
-        description={hasRealData ? "Real-time feeds active" : "Simulated data only"}
-      />
+      {showLiveData && (
+        <StatusBadge
+          icon={hasRealData ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+          label={hasRealData ? "Live Market Data" : "Demo Mode"}
+          status={hasRealData ? "active" : "warning"}
+          description={hasRealData ? "Real-time feeds active" : "Simulated data only"}
+          onClose={() => setShowLiveData(false)}
+          showClose
+        />
+      )}
 
       {/* AI Assistant Status */}
-      <StatusBadge
-        icon={hasAI ? <Zap className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-        label={hasAI ? "AI Assistant" : "Limited AI"}
-        status={hasAI ? "active" : "warning"}
-        description={hasAI ? "OpenAI GPT-4 enabled" : "Demo responses only"}
-      />
+      {showAI && (
+        <StatusBadge
+          icon={hasAI ? <Zap className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+          label={hasAI ? "AI Assistant" : "Limited AI"}
+          status={hasAI ? "active" : "warning"}
+          description={hasAI ? "OpenAI GPT-4 enabled" : "Demo responses only"}
+          onClose={() => setShowAI(false)}
+          showClose
+        />
+      )}
 
       {/* Conservation Mode */}
-      {conservationMode && (
+      {conservationMode && showConservation && (
         <StatusBadge
           icon={<Leaf className="h-4 w-4" />}
           label="Conservation Mode"
           status="warning"
           description="Reduced API usage active"
+          onClose={() => setShowConservation(false)}
+          showClose
         />
       )}
 
       {/* API Usage (Enterprise Feature) */}
-      {hasRealData && (
+      {hasRealData && showApiUsage && (
         <StatusBadge
           icon={<Activity className="h-4 w-4" />}
           label="API Usage"
           status="active"
           description={`${apiCallCount} calls today`}
+          onClose={() => setShowApiUsage(false)}
+          showClose
         />
       )}
 
-      {/* System Status */}
-      <StatusBadge
-        icon={<Database className="h-4 w-4" />}
-        label="System Status"
-        status="active"
-        description="All systems operational"
-      />
+      {/* System Status (auto-dismiss and closable) */}
+      {showSystemStatus && (
+        <StatusBadge
+          icon={<Database className="h-4 w-4" />}
+          label="System Status"
+          status="active"
+          description="All systems operational"
+          onClose={() => setShowSystemStatus(false)}
+          showClose
+        />
+      )}
     </div>
   )
 }

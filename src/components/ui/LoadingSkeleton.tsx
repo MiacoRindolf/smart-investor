@@ -25,7 +25,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
 
 // Stock Card Skeleton
 export const StockCardSkeleton: React.FC = () => (
-  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse dark:bg-gray-800 dark:border-gray-700">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center space-x-3">
         <Skeleton width="w-10" height="h-10" rounded />
@@ -52,7 +52,7 @@ export const StockCardSkeleton: React.FC = () => (
       </div>
     </div>
     
-    <div className="mt-4 pt-4 border-t border-gray-200">
+    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
       <Skeleton width="w-full" height="h-8" />
     </div>
   </div>
@@ -154,12 +154,12 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   action,
   className = ''
 }) => (
-  <div className={`text-center py-12 ${className}`}>
-    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-      <AlertTriangle className="h-6 w-6 text-red-600" />
+  <div className={`text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}>
+    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
+      <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-300" />
     </div>
-    <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
-    <p className="text-gray-500 mb-6 max-w-md mx-auto">{message}</p>
+    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
+    <p className="text-gray-500 dark:text-gray-300 mb-6 max-w-md mx-auto">{message}</p>
     {action && (
       <Button
         onClick={action.onClick}
@@ -204,31 +204,31 @@ export const RateLimitError: React.FC = () => {
   }, [])
 
   return (
-    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 dark:bg-yellow-900 dark:border-yellow-700">
       <div className="flex items-center mb-4">
-        <Clock className="h-6 w-6 text-yellow-600 mr-3" />
-        <h3 className="text-lg font-semibold text-yellow-900">
+        <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-300 mr-3" />
+        <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
           🚫 Daily API Limit Reached
         </h3>
       </div>
       
-      <p className="text-yellow-800 mb-4">
+      <p className="text-yellow-800 dark:text-yellow-200 mb-4">
         You've reached the 25 requests per day limit for Alpha Vantage's free tier.
       </p>
       
-      <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 mb-4">
+      <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 mb-4 dark:bg-yellow-800 dark:border-yellow-600">
         <div className="flex items-center justify-center">
-          <Clock className="h-5 w-5 mr-2 text-yellow-600" />
-          <span className="font-mono text-lg font-bold text-yellow-900">
+          <Clock className="h-5 w-5 mr-2 text-yellow-600 dark:text-yellow-300" />
+          <span className="font-mono text-lg font-bold text-yellow-900 dark:text-yellow-100">
             {timeUntilReset}
           </span>
         </div>
-        <div className="text-center text-sm text-yellow-700 mt-1">
+        <div className="text-center text-sm text-yellow-700 dark:text-yellow-300 mt-1">
           until reset (Midnight Eastern Time)
         </div>
       </div>
 
-      <div className="space-y-3 text-sm text-yellow-800">
+      <div className="space-y-3 text-sm text-yellow-800 dark:text-yellow-200">
         <div className="flex items-start">
           <span className="mr-2">⏳</span>
           <span>Wait for the countdown above to reach zero (free)</span>
@@ -253,8 +253,8 @@ export const RateLimitError: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-yellow-200">
-        <div className="flex items-center text-green-700 text-sm">
+      <div className="mt-4 pt-4 border-t border-yellow-200 dark:border-yellow-700">
+        <div className="flex items-center text-green-700 text-sm dark:text-green-300">
           <span className="mr-2">🌱</span>
           <strong>Conservation Mode:</strong>
           <span className="ml-1">
@@ -264,14 +264,4 @@ export const RateLimitError: React.FC = () => {
       </div>
     </div>
   )
-}
-
-export default {
-  StockCardSkeleton,
-  MarketIndexSkeleton,
-  NewsItemSkeleton,
-  ChartSkeleton,
-  DashboardStatsSkeleton,
-  ErrorState,
-  RateLimitError
 } 

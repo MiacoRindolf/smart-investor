@@ -2,12 +2,60 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Investor - Professional Trading Platform</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="description" content="AI-powered investment analysis platform with real-time market data and advanced stock analysis tools" />
+    <meta name="keywords" content="investment, stock market, trading, AI analysis, portfolio management" />
+    <meta name="author" content="SmartInvestor Team" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://www.alphavantage.co" />
+    <link rel="preconnect" href="https://query1.finance.yahoo.com" />
+    <link rel="dns-prefetch" href="https://www.alphavantage.co" />
+    <link rel="dns-prefetch" href="https://query1.finance.yahoo.com" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="SmartInvestor - AI-Powered Investment Analysis" />
+    <meta property="og:description" content="Professional investment analysis platform with real-time market data" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://smartinvestor.app" />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SmartInvestor - AI-Powered Investment Analysis" />
+    <meta name="twitter:description" content="Professional investment analysis platform with real-time market data" />
+    <meta name="twitter:image" content="/og-image.png" />
+    
+    <title>SmartInvestor - AI-Powered Investment Analysis</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html> 

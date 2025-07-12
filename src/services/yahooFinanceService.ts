@@ -1,32 +1,11 @@
-// Mock Yahoo Finance service to avoid browser compatibility issues
+// Yahoo Finance service to avoid browser compatibility issues
 // In a real implementation, this would be a backend service
 
-const mockStockData: { [key: string]: any } = {
-  'AAPL': { price: 175.43, change: 2.15, changePercent: 1.24, volume: 45678900 },
-  'GOOGL': { price: 142.56, change: -1.23, changePercent: -0.85, volume: 23456700 },
-  'MSFT': { price: 378.85, change: 3.45, changePercent: 0.92, volume: 34567800 },
-  'TSLA': { price: 248.42, change: -5.67, changePercent: -2.23, volume: 56789000 },
-  'AMZN': { price: 145.24, change: 1.78, changePercent: 1.24, volume: 45678900 },
-  'META': { price: 334.92, change: 4.56, changePercent: 1.38, volume: 34567800 },
-  'NVDA': { price: 485.09, change: 12.34, changePercent: 2.61, volume: 67890100 },
-  'AMD': { price: 128.45, change: -2.34, changePercent: -1.79, volume: 45678900 },
-  'JPM': { price: 172.34, change: 0.67, changePercent: 0.39, volume: 23456700 },
-  'JNJ': { price: 162.78, change: -0.89, changePercent: -0.54, volume: 12345600 },
-  'V': { price: 267.89, change: 1.23, changePercent: 0.46, volume: 23456700 },
-  'WMT': { price: 162.45, change: 0.34, changePercent: 0.21, volume: 34567800 },
-  'PG': { price: 156.78, change: -0.56, changePercent: -0.36, volume: 12345600 },
-  'UNH': { price: 523.67, change: 3.45, changePercent: 0.66, volume: 23456700 },
-  'HD': { price: 378.92, change: -2.34, changePercent: -0.61, volume: 34567800 },
-  'MA': { price: 445.23, change: 5.67, changePercent: 1.29, volume: 23456700 },
-  'DIS': { price: 89.45, change: -1.23, changePercent: -1.36, volume: 45678900 },
-  'PYPL': { price: 67.89, change: 0.78, changePercent: 1.16, volume: 34567800 },
-  'ADBE': { price: 567.34, change: 8.90, changePercent: 1.59, volume: 23456700 },
-  'NFLX': { price: 478.56, change: -3.45, changePercent: -0.72, volume: 34567800 },
-  'SPY': { price: 456.78, change: 2.34, changePercent: 0.51, volume: 78901200 },
-  'QQQ': { price: 378.90, change: 3.45, changePercent: 0.92, volume: 56789000 },
-  'DIA': { price: 345.67, change: 1.23, changePercent: 0.36, volume: 45678900 },
-  'IWM': { price: 189.45, change: -0.67, changePercent: -0.35, volume: 34567800 }
-}
+// Track backend health to reduce noise
+let backendFailureCount = 0
+let lastBackendFailureTime = 0
+const BACKEND_FAILURE_THRESHOLD = 5
+const BACKEND_RESET_TIME = 60000 // 1 minute
 
 const getCompanyName = (symbol: string): string => {
   const companyNames: { [key: string]: string } = {
@@ -58,14 +37,71 @@ const getCompanyName = (symbol: string): string => {
   return companyNames[symbol.toUpperCase()] || `${symbol.toUpperCase()} Corp.`
 }
 
+// Normalize symbol for Yahoo Finance (convert dots to dashes, etc.)
+const normalizeSymbol = (symbol: string): string => {
+  // Common symbol mappings for Yahoo Finance
+  const symbolMappings: { [key: string]: string } = {
+    'BRK.B': 'BRK-B',
+    'BRK.A': 'BRK-A',
+    'BF.B': 'BF-B',
+    'BF.A': 'BF-A'
+  }
+  
+  return symbolMappings[symbol] || symbol.replace(/\./g, '-')
+}
+
 export const getYahooStockQuote = async (symbol: string) => {
+  const normalizedSymbol = normalizeSymbol(symbol)
+  
+  // Check if backend is consistently failing
+  const now = Date.now()
+  if (backendFailureCount >= BACKEND_FAILURE_THRESHOLD && (now - lastBackendFailureTime) < BACKEND_RESET_TIME) {
+    // Backend is failing consistently, throw error instead of using fallback
+    throw new Error(`Yahoo Finance backend is down. Please try again later.`)
+  }
+  
   try {
-    const response = await fetch(`http://localhost:4000/api/quote/${symbol}`)
-    if (!response.ok) throw new Error('Failed to fetch from Yahoo Finance proxy')
+    const response = await fetch(`http://localhost:4000/api/quote/${encodeURIComponent(normalizedSymbol)}`)
+    
+    if (!response.ok) {
+      // If the normalized symbol fails, try the original symbol
+      if (normalizedSymbol !== symbol) {
+        const fallbackResponse = await fetch(`http://localhost:4000/api/quote/${encodeURIComponent(symbol)}`)
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json()
+          backendFailureCount = 0 // Reset failure count on success
+          return data
+        }
+      }
+      
+      // Track backend failures
+      backendFailureCount++
+      lastBackendFailureTime = now
+      
+      // Only log the first few failures to reduce noise
+      if (backendFailureCount <= 3) {
+        console.warn(`Yahoo Finance proxy error for ${symbol}: ${response.status} ${response.statusText}`)
+      } else if (backendFailureCount === BACKEND_FAILURE_THRESHOLD) {
+        console.warn(`Yahoo Finance backend appears to be down.`)
+      }
+      
+      throw new Error(`Yahoo Finance proxy returned ${response.status}: ${response.statusText}`)
+    }
+    
     const data = await response.json()
+    backendFailureCount = 0 // Reset failure count on success
     return data
   } catch (error) {
-    console.error('Yahoo Finance proxy error:', error)
-    throw new Error('Failed to fetch stock price from Yahoo Finance proxy')
+    // Track backend failures
+    backendFailureCount++
+    lastBackendFailureTime = now
+    
+    // Only log the first few failures to reduce noise
+    if (backendFailureCount <= 3) {
+      console.warn(`Yahoo Finance proxy error for ${symbol}:`, error instanceof Error ? error.message : String(error))
+    }
+    
+    // Re-throw the error instead of returning fallback data
+    throw error
   }
 } 

@@ -38,23 +38,28 @@ const Button: React.FC<ButtonProps> = ({
       bg-blue-600 text-white border border-transparent
       hover:bg-blue-700 focus:ring-blue-500
       shadow-sm hover:shadow-md
+      dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-400
     `,
     secondary: `
       bg-gray-100 text-gray-900 border border-gray-300
       hover:bg-gray-200 focus:ring-gray-500
+      dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 dark:focus:ring-gray-400
     `,
     outline: `
       bg-transparent text-blue-600 border border-blue-600
       hover:bg-blue-50 focus:ring-blue-500
+      dark:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-900/30 dark:focus:ring-blue-300
     `,
     ghost: `
       bg-transparent text-gray-700 border border-transparent
       hover:bg-gray-100 focus:ring-gray-500
+      dark:text-gray-200 dark:hover:bg-gray-800 dark:focus:ring-gray-400
     `,
     danger: `
       bg-red-600 text-white border border-transparent
       hover:bg-red-700 focus:ring-red-500
       shadow-sm hover:shadow-md
+      dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-400
     `
   }
 

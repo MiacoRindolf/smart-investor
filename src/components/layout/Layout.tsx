@@ -12,6 +12,7 @@ import {
   User
 } from 'lucide-react'
 import { ComponentWithChildren } from '../../types'
+import ThemeToggle from '../ui/ThemeToggle'
 
 interface LayoutProps extends ComponentWithChildren {
   currentPath: string
@@ -55,26 +56,27 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
   ]
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         >
-          <div className="absolute inset-0 bg-gray-600 opacity-75" />
+          <div className="absolute inset-0 bg-gray-600 opacity-75 dark:bg-gray-900 dark:opacity-80" />
         </div>
       )}
 
       {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        dark:bg-gray-900 dark:shadow-2xl
         lg:translate-x-0 lg:static lg:inset-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700">
+          <div className="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-900 dark:to-blue-800">
             <div className="flex items-center">
               <Building2 className="h-8 w-8 text-white" />
               <span className="ml-3 text-xl font-bold text-white">SmartInvestor</span>
@@ -98,21 +100,21 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
                   className={`
                     group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200
                     ${item.current
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-800'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white'
                     }
                   `}
                 >
                   <Icon className={`
                     mr-3 h-5 w-5 transition-colors duration-200
                     ${item.current 
-                      ? 'text-blue-600' 
-                      : 'text-gray-500 group-hover:text-gray-700'
+                      ? 'text-blue-600 dark:text-blue-300' 
+                      : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-white'
                     }
                   `} />
                   {item.name}
                   {item.current && (
-                    <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full" />
+                    <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full dark:bg-blue-400" />
                   )}
                 </a>
               )
@@ -120,8 +122,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 p-4">
-            <div className="text-xs text-gray-500 text-center">
+          <div className="border-t border-gray-200 p-4 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="text-xs text-gray-500 text-center dark:text-gray-400">
               <div className="font-medium">SmartInvestor Pro</div>
               <div className="mt-1">v2.0.0 • Enterprise</div>
             </div>
@@ -132,18 +134,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col lg:ml-0 min-w-0">
         {/* Top bar */}
-        <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-6">
+        <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-6 dark:bg-gray-900 dark:border-gray-800">
           <div className="flex items-center">
             <button
-              className="lg:hidden text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100"
+              className="lg:hidden text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="h-6 w-6" />
             </button>
-            
             {/* Breadcrumb or page title could go here */}
             <div className="ml-4 lg:ml-0">
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {navigation.find(item => item.current)?.name || 'Dashboard'}
               </h1>
             </div>
@@ -154,27 +155,30 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
             {/* Status indicator */}
             <div className="hidden sm:flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm text-gray-600">Live Data</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">Live Data</span>
             </div>
 
             {/* Notifications */}
-            <button className="text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100 relative">
+            <button className="text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100 relative dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
             </button>
 
             {/* Settings */}
-            <button className="text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100">
+            <button className="text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800">
               <Settings className="h-5 w-5" />
             </button>
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
 
             {/* User menu */}
             <div className="flex items-center space-x-3">
               <div className="hidden sm:block text-right">
-                <div className="text-sm font-medium text-gray-900">Investor</div>
-                <div className="text-xs text-gray-500">Professional Plan</div>
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">Investor</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Professional Plan</div>
               </div>
-              <button className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-200">
+              <button className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-200 dark:from-blue-700 dark:to-blue-900">
                 <User className="h-4 w-4" />
               </button>
             </div>
