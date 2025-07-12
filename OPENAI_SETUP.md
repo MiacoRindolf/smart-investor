@@ -9,7 +9,7 @@ Create a new file called `.env` in your project root directory (same level as pa
 VITE_ALPHA_VANTAGE_API_KEY=your_alpha_vantage_api_key_here
 
 # OpenAI API Key (for AI chat functionality)
-VITE_OPENAI_API_KEY=your_openai_api_key_here 
+VITE_OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ## Step 2: Restart Development Server
