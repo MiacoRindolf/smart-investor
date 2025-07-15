@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# Run pre-commit hooks using npm script
+npm run pre-commit 
